@@ -1,0 +1,5 @@
+transdecoder_proteome: /data1/shahs3/isabl_data_lake/analyses/53/42/45342/results/proteome/SHAH_H003947_T01_01_TR01/proteins.fa
+predicted_fusions: /data1/shahs3/isabl_data_lake/analyses/53/36/45336/ctat-LR-fusion.fusion_predictions.tsv
+samples: ["SHAH_H003947_T01_01_TR01"]
+protein_index_table: /data1/shahs3/isabl_data_lake/analyses/53/42/45342/results/proteome/SHAH_H003947_T01_01_TR01/protein_transcript_info.tsv
+out_dir: /data1/shahs3/users/preskaa/AMLproteogenomics/data/APS028_AML_PG2_analysis/PG_app_test

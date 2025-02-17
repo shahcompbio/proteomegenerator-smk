@@ -1,4 +1,57 @@
-# Main entrypoint of the workflow. 
-# Please follow the best practices: 
-# https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
-# in particular regarding the standardized folder structure mentioned there. 
+from snakemake.utils import min_version
+import os
+
+##### set minimum snakemake version #####
+min_version("7.31.1")
+
+transdecoder_proteins = config["transdecoder_proteome"]
+predicted_fusions = config["predicted_fusions"]
+samples = config["samples"]
+protein_index = config["protein_index_table"]
+out_dir = config["out_dir"]
+
+localrules: cp_index, cp_fasta
+
+rule all:
+    input:
+        expand(os.path.join(out_dir, "proteome", "{sample}", "fusions.fa"),
+            sample=samples),
+        expand(os.path.join(out_dir, "proteome", "{sample}", "protein_info.tsv"),
+            sample=samples),
+        expand(os.path.join(out_dir, "proteome", "{sample}", "transdecoder_proteins.fa"),
+            sample=samples),
+        expand(os.path.join(out_dir, "proteome", "{sample}", "proteome.fa"),
+            sample=samples)
+
+rule write_fusion_fasta:
+    input:
+        fusions = predicted_fusions
+    output:
+        fasta = os.path.join(out_dir, "proteome", "{sample}", "fusions.fa"),
+        fusion_table = os.path.join(out_dir, "proteome", "{sample}", "fusions.tsv")
+    container:
+        "docker://quay.io/preskaa/biopython:v241011a"
+    script:
+        "scripts/write_fusion_fasta.py"
+# copy protein description table and fasta to output directory for easy access
+rule cp_index:
+    input: protein_index
+    output: os.path.join(out_dir, "proteome", "{sample}", "protein_info.tsv")
+    shell:
+        "cp {input} {output}"
+rule cp_fasta:
+    input: transdecoder_proteins
+    output: os.path.join(out_dir, "proteome", "{sample}", "transdecoder_proteins.fa")
+    shell:
+        "cp {input} {output}"
+# merge the fastas
+rule merge_fasta:
+    input:
+        proteins = transdecoder_proteins,
+        fusions = os.path.join(out_dir, "proteome", "{sample}", "fusions.fa")
+    output:
+        proteome =  os.path.join(out_dir, "proteome", "{sample}", "proteome.fa")
+    container:
+        "docker://quay.io/preskaa/biopython:v241011a"
+    shell:
+        "cat {input.proteins} {input.fusions} > {output.proteome}"
